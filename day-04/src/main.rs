@@ -38,6 +38,8 @@ fn contains(start_one: i32, end_one: i32, start_two: i32, end_two: i32) -> bool 
 
 fn range_contains_range(first: &mut Range<i32>, second: Range<i32>) -> bool {
     print!("{:?} - {:?}", first, second);
+    // Challenge One => all
+    // Challenge Two => any
     let res = first.any(|item| second.contains(&item));
     println!(" = {}", res);
 
