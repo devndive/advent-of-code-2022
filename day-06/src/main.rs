@@ -20,7 +20,6 @@ mod tests {
     }
 }
 
-
 fn find_marker(input: String, window_size: usize) -> Option<i32> {
     let vec = input.chars().collect::<Vec<char>>();
     let windows = vec.windows(window_size);
