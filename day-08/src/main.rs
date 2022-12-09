@@ -41,30 +41,19 @@ fn calculate_scenic_score(field: &Vec<Vec<Tree>>, row_idx: usize, col_idx: usize
     let height = field.len();
     let width = field[0].len();
     let cur_height = field[row_idx][col_idx].height;
-    println!("cur_height: {}", cur_height);
 
-
-
-    println!("Going left: {:?}", (0..col_idx).rev());
     let mut left_count = 0;
     for left_idx in (0..col_idx).rev() {
-        println!("{}/{}: {}", col_idx, row_idx, field[row_idx][left_idx].height);
+        let height_to_compare = field[row_idx][left_idx].height;
+        left_count += 1;
 
-        if field[row_idx][left_idx].height < cur_height {
-            left_count += 1;
-        } else if field[row_idx][left_idx].height >= cur_height {
-            left_count += 1;
-            break;
-        } else {
+        if height_to_compare == cur_height {
             break;
         }
     }
-    println!("Left count: {}", left_count);
 
-    println!("Going right: {:?}", (col_idx + 1..width));
     let mut right_count = 0;
     for right_idx in col_idx + 1..width {
-        println!("{}/{}: {}", right_idx, row_idx, field[row_idx][right_idx].height);
         if field[row_idx][right_idx].height < cur_height {
             right_count += 1;
         } else if field[row_idx][right_idx].height >= cur_height {
@@ -74,7 +63,6 @@ fn calculate_scenic_score(field: &Vec<Vec<Tree>>, row_idx: usize, col_idx: usize
             break;
         }
     }
-    println!("Right count: {}", right_count);
 
     let mut up_count = 0;
     for up_idx in (0..row_idx).rev() {
@@ -87,7 +75,6 @@ fn calculate_scenic_score(field: &Vec<Vec<Tree>>, row_idx: usize, col_idx: usize
             break;
         }
     }
-    println!("Up count: {}", up_count);
 
     let mut down_count = 0;
     for down_idx in row_idx + 1..height {
@@ -100,9 +87,23 @@ fn calculate_scenic_score(field: &Vec<Vec<Tree>>, row_idx: usize, col_idx: usize
             break;
         }
     }
-    println!("Down count: {}", down_count);
 
     left_count * right_count * up_count * down_count
+}
+
+impl Tree {
+    fn is_visible(&self, tree_height: u32) -> bool {
+        tree_height < self.height
+    }
+
+    fn set_visible(&mut self, tree_height: u32) -> u32 {
+        if self.is_visible(tree_height) {
+            self.is_visible = true;
+            return self.height
+        }
+
+        tree_height
+    }
 }
 
 fn main() {
@@ -133,19 +134,12 @@ fn main() {
         let mut tree_height = field[row_idx][0].height;
 
         for col_idx in 1..width - 1 {
-            // println!("{}/{}: {}", col_idx, row_idx, field[row_idx][col_idx].height);
-            if tree_height < field[row_idx][col_idx].height {
-                field[row_idx][col_idx].is_visible = true;
-                tree_height = field[row_idx][col_idx].height;
-            }
+            tree_height = field[row_idx][col_idx].set_visible(tree_height);
         }
 
         tree_height = field[row_idx][width - 1].height;
         for col_idx in (1..width - 1).rev() {
-            if tree_height < field[row_idx][col_idx].height {
-                field[row_idx][col_idx].is_visible = true;
-                tree_height = field[row_idx][col_idx].height;
-            }
+            tree_height = field[row_idx][col_idx].set_visible(tree_height);
         }
     }
 
@@ -153,18 +147,12 @@ fn main() {
         let mut tree_height = field[0][col_idx].height;
 
         for row_idx in 1..height - 1 {
-            if tree_height < field[row_idx][col_idx].height {
-                field[row_idx][col_idx].is_visible = true;
-                tree_height = field[row_idx][col_idx].height;
-            }
+            tree_height = field[row_idx][col_idx].set_visible(tree_height);
         }
 
         let mut tree_height = field[height - 1][col_idx].height;
         for row_idx in (1..height - 1).rev() {
-            if tree_height < field[row_idx][col_idx].height {
-                field[row_idx][col_idx].is_visible = true;
-                tree_height = field[row_idx][col_idx].height;
-            }
+            tree_height = field[row_idx][col_idx].set_visible(tree_height);
         }
     }
 
