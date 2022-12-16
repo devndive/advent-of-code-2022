@@ -309,18 +309,6 @@ fn main() {
         '+',
     );
 
-    //print_field(&field);
-    //println!("");
-    let block_count = fields.iter().fold(0, |acc, row| {
-        if *row.1 == '#' {
-            return acc + 1;
-        } else {
-            acc
-        }
-    });
-
-    println!("Block count: {}", block_count);
-
     let mut is_sand_at_start = false;
     while !is_sand_at_start {
         let mut next_move = (sand_start.x, sand_start.y);
