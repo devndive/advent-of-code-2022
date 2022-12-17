@@ -1,40 +1,6 @@
-#[cfg(test)]
-mod Tests {
-    use crate::{Pair, Position};
-
-    #[test]
-    fn first_test() {
-        let p = Pair::from("Sensor at x=8, y=7: closest beacon is at x=2, y=10");
-        assert_eq!(p.is_in_range(Position { x: -1, y: 7 }), true);
-    }
-
-    fn calc_boundaries() {
-        // ---- 4 ----- Sensor
-        // ---- 5 ----- 
-        // -----8 -----
-
-        // => min_y = bottom - sensor.y => 1
-        // => max_y = top - sensor.y => 4
-
-        // ---- 5 ----- 
-        // ---- 6 ----- Sensor
-        // -----8 -----
-
-        // => min_y = bottom (5) - sensor.y (6) => -1
-        // => max_y = top (8) - sensor.y (6) => 2
-
-        // ---- 5 ----- 
-        // ---- 6 ----- 
-        // -----8 ----- Sensor
-
-        // => min_y = bottom - sensor.y => -3
-        // => max_y = top - sensor.y => -2
-    }
-}
-
 use std::{
-    collections::{HashMap, HashSet},
     fs,
+    thread::{self, Thread},
 };
 
 use regex::Regex;
@@ -45,9 +11,11 @@ struct Position {
     y: i32,
 }
 
+#[derive(Clone)]
 struct Pair {
-    beacon: Position,
+    // beacon: Position,
     sensor: Position,
+    distance: i32,
 }
 
 impl Position {
@@ -66,23 +34,27 @@ impl Pair {
         )
         .unwrap();
         let matches = re.captures(input).unwrap();
+        let sensor = Position::from(&matches[1], &matches[2]);
+        let beacon = Position::from(&matches[3], &matches[4]);
 
         Self {
-            sensor: Position::from(&matches[1], &matches[2]),
-            beacon: Position::from(&matches[3], &matches[4]),
+            sensor,
+            // beacon,
+            distance: (sensor.x - beacon.x).abs() + (sensor.y - beacon.y).abs(),
         }
     }
 
+    /*
     fn distance(&self) -> i32 {
         (self.sensor.x - self.beacon.x).abs() + (self.sensor.y - self.beacon.y).abs()
-    }
+    } */
 
-    fn is_in_range(&self, target: Position) -> bool {
-        let distance = self.distance();
-        (self.sensor.x - target.x).abs() + (self.sensor.y - target.y).abs() <= distance
+    fn is_in_range(&self, target: &Position) -> bool {
+        (self.sensor.x - target.x).abs() + (self.sensor.y - target.y).abs() <= self.distance
     }
 }
 
+/*
 fn part1() {
     let input = fs::read_to_string("./src/puzzle_input").unwrap();
     let pairs = input
@@ -96,7 +68,7 @@ fn part1() {
 
     for pair in pairs.iter() {
         println!("Processing {}/{}", pair.sensor.x, pair.sensor.y);
-        let distance = pair.distance();
+        let distance = pair.distance;
         if pair.sensor.y == target_row {
             blocks.insert(pair.sensor, "S");
         }
@@ -117,7 +89,7 @@ fn part1() {
                 y: pair.sensor.y + y,
             };
 
-            if pair.is_in_range(pos) && !blocks.contains_key(&pos) {
+            if pair.is_in_range(&pos) && !blocks.contains_key(&pos) {
                 // println!("Adding a block");
                 // There can be no beacon in this position
                 blocks.insert(pos, "#");
@@ -136,6 +108,7 @@ fn part1() {
 
     println!("Part 1: {}", items_in_row.count());
 }
+*/
 
 fn main() {
     let input = fs::read_to_string("./src/puzzle_input").unwrap();
@@ -144,40 +117,53 @@ fn main() {
         .map(|row| Pair::from(row))
         .collect::<Vec<Pair>>();
 
-    let LB = 0;
-    let RB = 4000000;
+    let lb = 0;
+    let rb = 4000000;
 
-    for pair in pairs.iter() {
-        let distance = pair.distance();
+    let range = (lb..=rb).collect::<Vec<i32>>();
 
-        // let min_x = LB - pair.sensor.x + distance;
-        // let max_x = pair.sensor.x + distance -RB;
+    let windows = range.chunks((rb / 10) as usize);
+    println!("Chunks: {} ", windows.len());
 
-        let mut min_x = LB - pair.sensor.x;
-        if pair.sensor.x > LB  {
-            min_x = LB - pair.sensor.x;
-        }
-        let mut max_x = RB - pair.sensor.x;
-        if pair.sensor.x > RB  {
-            max_x = RB - pair.sensor.x;
-        }
+    let mut handles = vec![];
+    for window in windows {
+        println!("Hä");
+        let p = pairs.clone();
+        let owned_window = window.to_vec();
 
-        println!("{} - {}", min_x, max_x);
-        for x in min_x..=max_x {
-            //println!("Round {}", x);
-            // let min_y = LB - pair.sensor.y + distance;
-            // let max_y = pair.sensor.y + distance - RB;
+        let handle = thread::spawn(move || {
+            println!("Thread - start {}", owned_window.len());
+            for y in owned_window {
+                println!("y: {}", y);
+                for x in lb..=rb {
+                    let pos = Position { x, y: y.clone() };
 
-            let mut min_y = LB - pair.sensor.y;
-            let mut max_y = RB - pair.sensor.y;
-
-        println!("  {} - {}", min_y, max_y);
-            for y in min_y..=max_y {
-                let all_out_of_range = pairs.iter().all(|p| !p.is_in_range(Position { x, y }));
-                if all_out_of_range {
-                    println!("Found ya! ({}/{})", x, y);
+                    let any_in_range = p.iter().any(|p| p.is_in_range(&pos));
+                    if !any_in_range {
+                        panic!("Found ya! ({}/{})", x, y);
+                    }
                 }
+            }
+        });
+
+        handles.push(handle);
+    }
+
+    for h in handles {
+        h.join().unwrap();
+    }
+
+    /*
+    for y in lb..=rb {
+        println!("y: {}", y);
+        for x in lb..=rb {
+            let pos = Position { x, y };
+
+            let any_in_range = pairs.iter().any(|p| p.is_in_range(&pos));
+            if !any_in_range {
+                panic!("Found ya! ({}/{})", x, y);
             }
         }
     }
+    */
 }
