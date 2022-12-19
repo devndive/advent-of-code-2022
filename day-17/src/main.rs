@@ -1,4 +1,7 @@
-use std::{collections::{HashSet, HashMap}, fs};
+use std::{
+    collections::HashSet,
+    fs,
+};
 
 #[derive(Eq, Hash, PartialEq, Clone, Debug)]
 struct Position {
@@ -117,7 +120,6 @@ fn let_stone_fall(
     mut starting_point: i32,
     mut falling_stone: Stone,
     occupied_fields: &mut HashSet<Position>,
-    occupied_fields_2: &mut HashMap<usize, HashSet<usize>>,
     stream: &String,
 ) -> (usize, i32) {
     let drawing_point = starting_point - falling_stone.height();
@@ -172,16 +174,13 @@ fn let_stone_fall(
         }
     });
 
-    let highest_point = occupied_fields
-        .iter()
-        .min_by(|x, y| x.y.cmp(&y.y))
-        .unwrap();
+    let highest_point = occupied_fields.iter().min_by(|x, y| x.y.cmp(&y.y)).unwrap();
 
     return (steps + 1, highest_point.y - 4);
 }
 
 fn main() {
-    let stream = fs::read_to_string("./src/puzzle_input").unwrap();
+    let stream = fs::read_to_string("./src/test_input").unwrap();
 
     let mut starting_point = 0;
 
@@ -250,20 +249,17 @@ fn main() {
         stone_six,
     ];
 
+    /*
     let mut steps = 0;
     let mut occupied_fields = HashSet::new();
 
-    let mut occupied_fields_2: HashMap<usize, HashSet<usize>> = HashMap::new();
-
     //let mut stone_counter = 0;
-    for stone_counter in 0..1000000000000 {
-        println!("Left over {}", 1000000000000 - stone_counter);
+    for stone_counter in 0..2022 {
         let res = let_stone_fall(
             steps,
             starting_point,
             all_stones[stone_counter % 5].clone(),
             &mut occupied_fields,
-            &mut occupied_fields_2,
             &stream,
         );
 
@@ -272,147 +268,64 @@ fn main() {
         //println!("New starting point {}", starting_point);
     }
 
-    let highest_point = occupied_fields
-        .iter()
-        .min_by(|x, y| x.y.cmp(&y.y))
-        .unwrap();
+    let highest_point = occupied_fields.iter().min_by(|x, y| x.y.cmp(&y.y)).unwrap();
 
     println!("Part 1:  {}", (highest_point.y - 4).abs());
-    /*
-    let res = let_stone_fall(
-        steps,
-        starting_point,
-        all_stones[0].clone(),
-        &mut occupied_fields,
-        &stream,
-    );
-
-    steps = res.0;
-    starting_point = res.1;
-    println!("New starting point {}", starting_point);
-
-    let res = let_stone_fall(
-        steps,
-        starting_point,
-        all_stones[1].clone(),
-        &mut occupied_fields,
-        &stream,
-    );
-
-    steps = res.0;
-    starting_point = res.1;
-    println!("New starting point {}", starting_point);
-
-    let res = let_stone_fall(
-        steps,
-        starting_point,
-        all_stones[2].clone(),
-        &mut occupied_fields,
-        &stream,
-    );
-
-    steps = res.0;
-    starting_point = res.1;
-    println!("New starting point {}", starting_point);
-
-    let res = let_stone_fall(
-        steps,
-        starting_point,
-        all_stones[3].clone(),
-        &mut occupied_fields,
-        &stream,
-    );
-
-    steps = res.0;
-    starting_point = res.1;
-    println!("New starting point {}", starting_point);
-
-    let res = let_stone_fall(
-        steps,
-        starting_point,
-        all_stones[4].clone(),
-        &mut occupied_fields,
-        &stream,
-    );
-
-    steps = res.0;
-    starting_point = res.1;
-    println!("New starting point {}", starting_point);
-
-    let res = let_stone_fall(
-        steps,
-        starting_point,
-        all_stones[5].clone(),
-        &mut occupied_fields,
-        &stream,
-    ); */
-    /*
-    // print field 7x4
-    /*
-    let mut falling_stone = stone_one.clone();
-    falling_stone.move_to(Position {
-        x: 2,
-        y: starting_point,
-    });
     */
 
-    draw_field(starting_point, &occupied_fields, &falling_stone);
+    // 6 * 10091
+    let rounds_till_repeat = 6 * stream.len();
+    println!("6 * {} = {}", stream.len(), rounds_till_repeat);
+    let mut steps = 0;
+    let mut occupied_fields = HashSet::new();
 
-    let jet_stream = stream.chars().nth(steps % stream.len()).unwrap();
-    if jet_stream == '>' {
-        if falling_stone.can_move_right() {
-            falling_stone.move_right();
-        }
-    } else {
-        if falling_stone.can_move_left() {
-            falling_stone.move_left();
-        }
+    //let mut stone_counter = 0;
+    for stone_counter in 0..rounds_till_repeat {
+        let res = let_stone_fall(
+            steps,
+            starting_point,
+            all_stones[stone_counter % 5].clone(),
+            &mut occupied_fields,
+            &stream,
+        );
+
+        steps = res.0;
+        starting_point = res.1;
+        //println!("New starting point {}", starting_point);
     }
 
-    draw_field(starting_point, &occupied_fields, &falling_stone);
+    let highest_point = occupied_fields.iter().min_by(|x, y| x.y.cmp(&y.y)).unwrap();
+    let highest_point = (highest_point.y - 4).abs();
+    println!("{}", highest_point);
 
-    while falling_stone.can_move_down(&occupied_fields) {
-        steps += 1;
-        falling_stone.move_down();
 
-        let jet_stream = stream.chars().nth(steps % stream.len()).unwrap();
-        if jet_stream == '>' {
-            if falling_stone.can_move_right() {
-                falling_stone.move_right();
-            }
-        } else {
-            if falling_stone.can_move_left() {
-                falling_stone.move_left();
-            }
-        }
-        draw_field(starting_point, &occupied_fields, &falling_stone);
+    let remainder: i64= 1000000000000 % rounds_till_repeat as i64;
+    let repeats = (1000000000000 - remainder) / rounds_till_repeat as i64;
+
+
+    let mut steps = 0;
+    let mut starting_point = 0;
+    let mut occupied_fields = HashSet::new();
+
+    //let mut stone_counter = 0;
+    for stone_counter in 0..remainder as usize {
+        let res = let_stone_fall(
+            steps,
+            starting_point,
+            all_stones[stone_counter % 5].clone(),
+            &mut occupied_fields,
+            &stream,
+        );
+
+        steps = res.0;
+        starting_point = res.1;
+        //println!("New starting point {}", starting_point);
     }
 
-    falling_stone.fields.iter().for_each(|f| {
-        occupied_fields.insert(f.clone());
-    });
+    let rest_points = occupied_fields.iter().min_by(|x, y| x.y.cmp(&y.y)).unwrap();
+    let rest_points = (rest_points.y - 4).abs();
 
-    let highest_point = falling_stone
-        .fields
-        .iter()
-        .min_by(|x, y| x.y.cmp(&y.y))
-        .unwrap();
-    starting_point = starting_point - highest_point.y;
-
-    println!("Starting point {}", starting_point);
-
-    let mut f_stone_two = stone_two.clone();
-    f_stone_two.move_to(Position {
-        x: 2,
-        y: starting_point,
-    });
-
-    draw_field(starting_point, &occupied_fields, &f_stone_two);
-    while f_stone_two.can_move_down(&occupied_fields) {
-        f_stone_two.move_down();
-
-        draw_field(starting_point, &occupied_fields, &f_stone_two);
-    } */
+    println!("Part 2: {}", repeats * highest_point as i64 + rest_points as i64);
 }
 
 fn draw_field(starting_point: i32, occupied_fields: &HashSet<Position>, falling_stone: &Stone) {
