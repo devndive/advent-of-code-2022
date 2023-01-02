@@ -180,24 +180,34 @@ fn main() {
     }
 
     println!("{}", all_points.len());
+    /*
     let mut min_x = 4000000;
     let mut max_x = 0;
     let mut min_y = 4000000;
     let mut max_y = 0;
+    */
+
+    let mut map: HashMap<i32, (i32, i32)> = HashMap::new();
+    let mut min_y = 4000000;
+    let mut max_y = 0;
 
     for point in all_points.iter() {
+        let mut min_x = 4000000;
+        let mut max_x = 0;
+
+        if map.contains_key(&point.y) {
+            let values = map.get(&point.y).unwrap();
+
+            min_x = values.0;
+            max_x = values.1;
+        }
+
         min_x = min_x.min(point.x);
         max_x = max_x.max(point.x);
         min_y = min_y.min(point.y);
         max_y = max_y.max(point.y);
-    }
 
-    if min_x < 0 {
-        min_x = 0;
-    }
-
-    if max_x > 4000000 {
-        max_x = 4000000;
+        map.insert(point.y, (min_x, max_x));
     }
 
     if min_y < 0 {
@@ -207,9 +217,6 @@ fn main() {
     if max_y > 4000000 {
         max_y = 4000000;
     }
-
-    println!("X: {min_x} - {max_x}");
-    println!("Y: {min_y} - {max_y}");
 
     /*
     for y in -15..=15 {
@@ -226,27 +233,27 @@ fn main() {
     */
 
     /*
-    let mut hash_map = vec![];
-    for point in all_points {
-        let pt = [
-            (-1, -1),
-            (0, -1),
-            (1, -1),
-            (-1, 0),
-            (1, 0),
-            (-1, 1),
-            (0, 1),
-            (1, 1),
-        ];
+       let mut hash_map = vec![];
+       for point in all_points {
+           let pt = [
+               (-1, -1),
+               (0, -1),
+               (1, -1),
+               (-1, 0),
+               (1, 0),
+               (-1, 1),
+               (0, 1),
+               (1, 1),
+           ];
 
-        pt.iter().for_each(|t| {
-            let x_1 = point.x + t.0;
-            let y_1 = point.y + t.1;
+           pt.iter().for_each(|t| {
+               let x_1 = point.x + t.0;
+               let y_1 = point.y + t.1;
 
-            hash_map.push(Position { x: x_1, y: y_1 });
-        });
-    }
- */
+               hash_map.push(Position { x: x_1, y: y_1 });
+           });
+       }
+    */
     /*
     for y in -15..=15 {
         for x in -40..=40 {
@@ -298,43 +305,57 @@ fn main() {
         }
     }); */
 
-    for y in min_y-1..=max_y+1 {
-        println!("{y}");
+    for y in min_y - 1..=max_y + 1 {
+        //for point_check in hash_map.iter() {
+        //    if point_check.x == 14 {
+        //        println!("Checking {}/{}", point_check.x, point_check.y);
+        //    }
+        let values = map.get(&min_y);
+        if values.is_some() {
+            let (mut min_x, mut max_x) = values.unwrap();
 
-    //for point_check in hash_map.iter() {
-    //    if point_check.x == 14 {
-    //        println!("Checking {}/{}", point_check.x, point_check.y);
-    //    }
-        for x in min_x-1..=max_x+1 {
-            if !pairs
-                .iter()
-                .any(|pair| pair.is_in_range(&Position { x, y }))
-            {
-                let pt = [
-                    (-1, -1),
-                    (0, -1),
-                    (1, -1),
-                    (-1, 0),
-                    (1, 0),
-                    (-1, 1),
-                    (0, 1),
-                    (1, 1),
-                ];
+            if min_x < 0 {
+                min_x = 0;
+            }
 
-                let result = pt.iter().all(|test| {
+            if max_x > 4000000 {
+                max_x = 4000000;
+            }
 
-                    return pairs.iter().any(|pair| {
-                        return pair.is_in_range(&Position {
-                            x: x + test.0,
-                            y: y + test.1,
+            println!("{y}: {min_x} - {max_x}");
+            for x in min_x - 1..=max_x + 1 {
+                if !pairs
+                    .iter()
+                    .any(|pair| pair.is_in_range(&Position { x, y }))
+                {
+                    let pt = [
+                        (-1, -1),
+                        (0, -1),
+                        (1, -1),
+                        (-1, 0),
+                        (1, 0),
+                        (-1, 1),
+                        (0, 1),
+                        (1, 1),
+                    ];
+
+                    let result = pt.iter().all(|test| {
+                        return pairs.iter().any(|pair| {
+                            return pair.is_in_range(&Position {
+                                x: x + test.0,
+                                y: y + test.1,
+                            });
                         });
                     });
-                });
 
-                //let point_check_out_of_range = pairs.iter().any(|pair| pair.is_in_range(&point_check));
+                    //let point_check_out_of_range = pairs.iter().any(|pair| pair.is_in_range(&point_check));
 
-                if result /*&& !point_check_out_of_range*/ {
-                    println!("Found {}/{}", x, y);
+                    if result
+                    /*&& !point_check_out_of_range*/
+                    {
+                        println!("Found {}/{}", x, y);
+                        panic!("Done");
+                    }
                 }
             }
         }
